@@ -1,32 +1,28 @@
+require "open-uri"
+
 class GamesController < ApplicationController
+
   def new
-    @letters = ("A".."Z").to_a.sample(10).join(" ")
+    @letters = ('A'..'Z').to_a.sample(10)
+    @letters.shuffle!
   end
-
-  def is_word_valid?
-    word.chars.all? { |letter| board.include?(letter) && (board.count(letter) >= word.count(letter)) }
-  end
-
-  def is_english_word_valid?
-    url = "https://wagon-dictionary.herokuapp.com/#{word}"
-    @json = JSON.parse(URI.open(url).read)
-    return json["found"]
-  end
-
 
   def score
-    @score = 0
+    @letters = params[:letters].split #transformer en array
     @word = params[:word]
-    @board = params[:board].split
-    @lettervalue = params[:lettervalue]
-    raise
-    if
-      puts "Sorry but #{@word} can't be built out of #{@lettervalue}"
-    elsif
+    @included = included?(@word, @letters)
+    @english_word = english_word?(@word)
+  end
 
-      puts "Sorry but #{@word} does not seem to be a valid English word..."
-    else
-      puts "Congratulations! #{@word} is a valid English word!"
-    end
+  private
+
+  def included?(word, letters)
+    word.chars.all? { |letter| word.count(letter) <= letters.count(letter) }
+  end
+
+  def english_word?(word)
+    response = URI.open("https://wagon-dictionary.herokuapp.com/#{word}")
+    json = JSON.parse(response.read)
+    json['found']
   end
 end
